@@ -1,6 +1,6 @@
 import * as React from 'react';
 import style from './Clock.module.scss';
-export default function Clock() {
+export default function Clock({ handleZoomOut }) {
     const [clock, setClock] = React.useState({
         hour: '',
         minute: '',
@@ -41,7 +41,7 @@ export default function Clock() {
         transform: `rotate(${clock.hour}deg)`,
     };
     return (
-        <div className={style.clock}>
+        <div className={style.clock} onClick={handleZoomOut}>
             <div className={style.wrap}>
                 <span className={style.hour} style={hoursStyle}></span>
                 <span className={style.minute} style={minutesStyle}></span>
