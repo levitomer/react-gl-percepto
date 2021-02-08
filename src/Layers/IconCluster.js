@@ -19,7 +19,7 @@ function getIconSize(size) {
     return Math.min(100, size) / 100 + 1;
 }
 
-export default class IconClusterLayer extends CompositeLayer {
+export default class IconCluster extends CompositeLayer {
     shouldUpdateState({ changeFlags }) {
         return changeFlags.somethingChanged;
     }
