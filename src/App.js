@@ -1,11 +1,10 @@
 /// app.js
 import React from 'react';
 import { MapView } from '@deck.gl/core';
-import DeckGL from '@deck.gl/react';
-import { IconLayer } from '@deck.gl/layers';
 import coordinates from './json/coordinates.json';
+import DeckGL, { IconLayer } from 'deck.gl';
 import { StaticMap } from 'react-map-gl';
-// Set your mapbox access token here
+
 const MAPBOX_ACCESS_TOKEN =
     'pk.eyJ1IjoibGV2aXRvbWVyIiwiYSI6ImNqbjFxcTJheTF1czYza28xcWRjbDVkNGIifQ.11bnEt7mIrAiMKijbeuRcg';
 
@@ -16,6 +15,8 @@ const ICON_MAPPING = {
 export default function App() {
     const [markers, setMarkers] = React.useState([]);
     const [origin, setOrigin] = React.useState(null);
+
+    // Deck.Gl IconLayer setup
     const layer = new IconLayer({
         id: 'IconLayer',
         data: markers,
@@ -24,12 +25,16 @@ export default function App() {
         iconMapping: ICON_MAPPING,
         sizeScale: 15,
         getIcon: (d) => 'marker',
-        getPosition: (d) => d.coordinates,
+        getPosition: (d) => {
+            const [lat, lng] = d.coordinates;
+            return [lng, lat];
+        },
         getSize: (d) => 5,
         getColor: (d) => [Math.sqrt(d.exits), 140, 0],
     });
 
     React.useEffect(() => {
+        // Transforming data to markers
         const markers = coordinates.reduce((acc, curr, idx) => {
             const marker = {
                 name: idx,
@@ -40,6 +45,7 @@ export default function App() {
         }, []);
         setMarkers(markers);
 
+        // Calculating average coordinates of aggregated markers
         const originAvg = coordinates.reduce(
             (acc, curr) => {
                 acc[0] += curr[0];
@@ -56,7 +62,7 @@ export default function App() {
         setOrigin(origin);
     }, []);
 
-    // Viewport settings
+    // Deck.Gl Viewport settings
     const INITIAL_VIEW_STATE = {
         latitude: origin && origin[0],
         longitude: origin && origin[1],
@@ -68,15 +74,12 @@ export default function App() {
     return (
         <DeckGL
             initialViewState={INITIAL_VIEW_STATE}
-            layers={[layer]}
+            layers={layer}
             controller={true}
-            getTooltip={(marker) => {
-                console.log('marker:', marker);
-                return (
-                    marker &&
-                    `Name: ${marker.name}\nCoordinates:${marker.coordinates}`
-                );
-            }}
+            getTooltip={(marker) =>
+                marker.coordinates &&
+                `Name: ${marker.name}\nCoordinates:${marker.coordinates}`
+            }
         >
             <MapView id="map" width="70%">
                 <StaticMap mapboxApiAccessToken={MAPBOX_ACCESS_TOKEN} />
