@@ -4,6 +4,7 @@ import { MapView } from '@deck.gl/core';
 import coordinates from './json/coordinates.json';
 import DeckGL, { IconLayer } from 'deck.gl';
 import { StaticMap } from 'react-map-gl';
+import Clock from './components/Clock/Clock';
 
 const MAPBOX_ACCESS_TOKEN =
     'pk.eyJ1IjoibGV2aXRvbWVyIiwiYSI6ImNqbjFxcTJheTF1czYza28xcWRjbDVkNGIifQ.11bnEt7mIrAiMKijbeuRcg';
@@ -72,18 +73,24 @@ export default function App() {
     };
 
     return (
-        <DeckGL
-            initialViewState={INITIAL_VIEW_STATE}
-            layers={layer}
-            controller={true}
-            getTooltip={(marker) =>
-                marker.coordinates &&
-                `Name: ${marker.name}\nCoordinates:${marker.coordinates}`
-            }
-        >
-            <MapView id="map" width="70%">
-                <StaticMap mapboxApiAccessToken={MAPBOX_ACCESS_TOKEN} />
-            </MapView>
-        </DeckGL>
+        <React.Fragment>
+            <DeckGL
+                initialViewState={INITIAL_VIEW_STATE}
+                layers={layer}
+                controller={true}
+                getTooltip={(marker) =>
+                    marker.name && (
+                        <span
+                            key={marker.name}
+                        >{`Name: ${marker.name}\nCoordinates:${marker.coordinates}`}</span>
+                    )
+                }
+            >
+                <MapView id="map" width="70%">
+                    <StaticMap mapboxApiAccessToken={MAPBOX_ACCESS_TOKEN} />
+                    <Clock />
+                </MapView>
+            </DeckGL>
+        </React.Fragment>
     );
 }
