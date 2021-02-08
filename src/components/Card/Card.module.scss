@@ -11,10 +11,12 @@
     border-radius: 5px;
     display: flex;
     flex-direction: column;
+    justify-content: center;
     align-items: center;
+    cursor: pointer;
 
     div {
         color: white;
-        padding: 5%;
+        padding: 1%;
     }
 }

@@ -2,7 +2,12 @@ import React from 'react';
 import style from './Menu.module.scss';
 import Card from '../Card/Card';
 
-export default function Menu({ markers, toggle, handleMenuToggle }) {
+export default function Menu({
+    markers,
+    toggle,
+    handleMenuToggle,
+    handleGoTo,
+}) {
     // seperating logo from menu on toggle
     if (!toggle) {
         return (
@@ -29,7 +34,8 @@ export default function Menu({ markers, toggle, handleMenuToggle }) {
                         return (
                             <Card
                                 key={marker.name}
-                                coordinates={marker.coordinates}
+                                onGoTo={handleGoTo}
+                                marker={marker}
                             />
                         );
                     })}
