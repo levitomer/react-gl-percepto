@@ -10,19 +10,16 @@ import IconCluster from '../Layers/IconCluster';
 import Menu from '../components/Menu/Menu';
 import markerMapping from '../json/markerMapping.json';
 import markerAtlas from '../assets/marker-atlas.png';
-
-// ENVIRONMENT VARIABLES
-const MAPBOX_ACCESS_TOKEN = process.env.REACT_APP_MAPBOX_ACCESS_TOKEN;
-const MAP_STYLE = process.env.REACT_APP_MAP_STYLE;
+import * as CONSTANTS from '../constants/map.js';
 
 /* eslint-disable react/no-deprecated */
 export default function App({
     iconMapping = markerMapping,
     iconAtlas = markerAtlas,
     showCluster = true,
-    mapStyle = MAP_STYLE,
+    mapStyle = process.env.REACT_APP_MAP_STYLE,
 }) {
-    const [zoom, setZoom] = React.useState(16);
+    const [zoom, setZoom] = React.useState(CONSTANTS.INITIAL_ZOOM);
     const [markers, setMarkers] = React.useState([]);
     const [origin, setOrigin] = React.useState([]);
     const [hoverInfo, setHoverInfo] = useState({});
@@ -75,11 +72,13 @@ export default function App({
 
     const onGoTo = (marker) => {
         setOrigin(marker.coordinates);
-        setZoom(22);
+        setZoom(CONSTANTS.ZOOM_MARKER);
     };
 
     const onZoomOut = () => {
-        setZoom(10);
+        if (zoom > CONSTANTS.ZOOM_RESET) {
+            setZoom(CONSTANTS.ZOOM_RESET);
+        }
     };
 
     const layerProps = {
@@ -112,10 +111,10 @@ export default function App({
     const INITIAL_VIEW_STATE = {
         latitude: origin && origin[0],
         longitude: origin && origin[1],
-        maxZoom: 20,
+        maxZoom: CONSTANTS.MAX_ZOOM,
         zoom: zoom,
-        pitch: 0,
-        bearing: 0,
+        pitch: CONSTANTS.PITCH,
+        bearing: CONSTANTS.BEARING,
     };
 
     return (
@@ -143,7 +142,9 @@ export default function App({
                         reuseMaps
                         mapStyle={mapStyle}
                         preventStyleDiffing={true}
-                        mapboxApiAccessToken={MAPBOX_ACCESS_TOKEN}
+                        mapboxApiAccessToken={
+                            process.env.REACT_APP_MAPBOX_ACCESS_TOKEN
+                        }
                     />
                     <Clock handleZoomOut={onZoomOut} />
                 </MapView>

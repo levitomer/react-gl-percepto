@@ -1,16 +1,17 @@
 import { CompositeLayer } from '@deck.gl/core';
 import { IconLayer } from '@deck.gl/layers';
 import Supercluster from 'supercluster';
+import * as CONSTANTS from '../constants/cluster';
 
 function getIconName(size) {
-    if (size === 0) {
+    if (size === CONSTANTS.SINGLE_MARKER) {
         return '';
     }
-    if (size < 10) {
+    if (size < CONSTANTS.MEDIUM_CLUSTER) {
         return `marker-${size}`;
     }
-    if (size < 100) {
-        return `marker-${Math.floor(size / 10)}0`;
+    if (size < CONSTANTS.MAX_CLUSTER) {
+        return `marker-${Math.floor(size / CONSTANTS.MEDIUM_CLUSTER)}0`;
     }
     return 'marker-100';
 }
