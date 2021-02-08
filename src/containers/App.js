@@ -7,7 +7,6 @@ import Clock from '../components/Clock/Clock';
 import coordinates from '../json/coordinates.json';
 import { ToolTip, IconClusterLayer } from '../components/Map';
 import Menu from '../components/Menu/Menu';
-import Header from '../components/Header/Header';
 import markerMapping from '../json/markerMapping.json';
 import markerAtlas from '../assets/marker-atlas.png';
 
@@ -27,12 +26,13 @@ export default function App({
     const [markers, setMarkers] = React.useState([]);
     const [origin, setOrigin] = React.useState([]);
     const [hoverInfo, setHoverInfo] = useState({});
+    const [toggle, setToggle] = React.useState(false);
 
     React.useEffect(() => {
         // Transforming data to markers
         const markers = coordinates.reduce((acc, curr, idx) => {
             const marker = {
-                name: idx,
+                name: idx, // marker name is the marker index in list, (no name attribute provided)
                 coordinates: curr,
             };
             acc.push(marker);
@@ -57,16 +57,22 @@ export default function App({
         setOrigin(origin);
     }, []);
 
-    const hideTooltip = () => {
+    const onHideTooltip = () => {
         setHoverInfo({});
     };
-    const expandTooltip = (info) => {
+
+    const onExpandTooltip = (info) => {
         if (info.picked && showCluster) {
             setHoverInfo(info);
         } else {
             setHoverInfo({});
         }
     };
+
+    const onToggleMenu = () => {
+        setToggle(!toggle);
+    };
+
     const layerProps = {
         data: markers,
         pickable: true,
@@ -105,16 +111,24 @@ export default function App({
 
     return (
         <React.Fragment>
-            <Header />
-            <Menu markers={markers} />
+            <Menu
+                toggle={toggle}
+                markers={markers}
+                handleMenuToggle={onToggleMenu}
+            />
             <DeckGL
                 layers={[layer]}
                 initialViewState={INITIAL_VIEW_STATE}
                 controller={{ dragRotate: false }}
-                onViewStateChange={hideTooltip}
-                onClick={expandTooltip}
+                onViewStateChange={onHideTooltip}
+                onClick={onExpandTooltip}
             >
-                <MapView id="map" bottom="0" width="70%" repeat={true}>
+                <MapView
+                    id="map"
+                    bottom="0"
+                    width={toggle ? '70%' : '100%'}
+                    repeat={true}
+                >
                     <StaticMap
                         reuseMaps
                         mapStyle={mapStyle}
