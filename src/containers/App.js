@@ -5,16 +5,15 @@ import { MapView } from '@deck.gl/core';
 import { IconLayer } from '@deck.gl/layers';
 import Clock from '../components/Clock/Clock';
 import coordinates from '../json/coordinates.json';
-import { ToolTip, IconClusterLayer } from '../components/Map';
+import ToolTip from '../components/ToolTip/ToolTip';
+import IconCluster from '../Layers/IconCluster';
 import Menu from '../components/Menu/Menu';
 import markerMapping from '../json/markerMapping.json';
 import markerAtlas from '../assets/marker-atlas.png';
 
-const MAPBOX_ACCESS_TOKEN =
-    'pk.eyJ1IjoibGV2aXRvbWVyIiwiYSI6ImNqbjFxcTJheTF1czYza28xcWRjbDVkNGIifQ.11bnEt7mIrAiMKijbeuRcg';
-
-const MAP_STYLE =
-    'https://basemaps.cartocdn.com/gl/dark-matter-nolabels-gl-style/style.json';
+// ENVIRONMENT VARIABLES
+const MAPBOX_ACCESS_TOKEN = process.env.REACT_APP_MAPBOX_ACCESS_TOKEN;
+const MAP_STYLE = process.env.REACT_APP_MAP_STYLE;
 
 /* eslint-disable react/no-deprecated */
 export default function App({
@@ -23,6 +22,7 @@ export default function App({
     showCluster = true,
     mapStyle = MAP_STYLE,
 }) {
+    const [zoom, setZoom] = React.useState(16);
     const [markers, setMarkers] = React.useState([]);
     const [origin, setOrigin] = React.useState([]);
     const [hoverInfo, setHoverInfo] = useState({});
@@ -73,6 +73,15 @@ export default function App({
         setToggle(!toggle);
     };
 
+    const onGoTo = (marker) => {
+        setOrigin(marker.coordinates);
+        setZoom(22);
+    };
+
+    const onZoomOut = () => {
+        setZoom(10);
+    };
+
     const layerProps = {
         data: markers,
         pickable: true,
@@ -86,7 +95,7 @@ export default function App({
     };
 
     const layer = showCluster
-        ? new IconClusterLayer({
+        ? new IconCluster({
               ...layerProps,
               id: 'icon-cluster',
               sizeScale: 60,
@@ -104,7 +113,7 @@ export default function App({
         latitude: origin && origin[0],
         longitude: origin && origin[1],
         maxZoom: 20,
-        zoom: 16,
+        zoom: zoom,
         pitch: 0,
         bearing: 0,
     };
@@ -114,6 +123,7 @@ export default function App({
             <Menu
                 toggle={toggle}
                 markers={markers}
+                handleGoTo={onGoTo}
                 handleMenuToggle={onToggleMenu}
             />
             <DeckGL
@@ -135,7 +145,7 @@ export default function App({
                         preventStyleDiffing={true}
                         mapboxApiAccessToken={MAPBOX_ACCESS_TOKEN}
                     />
-                    <Clock />
+                    <Clock handleZoomOut={onZoomOut} />
                 </MapView>
 
                 {hoverInfo && <ToolTip info={hoverInfo} />}
