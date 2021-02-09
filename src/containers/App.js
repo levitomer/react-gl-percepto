@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { StaticMap } from 'react-map-gl';
 import DeckGL from '@deck.gl/react';
 import { MapView } from '@deck.gl/core';
-import { IconLayer } from '@deck.gl/layers';
 import Clock from '../components/Clock/Clock';
 import coordinates from '../json/coordinates.json';
 import ToolTip from '../components/ToolTip/ToolTip';
@@ -16,10 +15,9 @@ import * as CONSTANTS from '../constants/map.js';
 export default function App({
     iconMapping = markerMapping,
     iconAtlas = markerAtlas,
-    showCluster = true,
     mapStyle = process.env.REACT_APP_MAP_STYLE,
 }) {
-    const [zoom, setZoom] = React.useState(CONSTANTS.INITIAL_ZOOM);
+    const zoomRef = React.useRef(CONSTANTS.INITIAL_ZOOM);
     const [markers, setMarkers] = React.useState([]);
     const [origin, setOrigin] = React.useState([]);
     const [hoverInfo, setHoverInfo] = useState({});
@@ -54,65 +52,64 @@ export default function App({
         setOrigin(origin);
     }, []);
 
-    const onHideTooltip = () => {
-        setHoverInfo({});
-    };
+    const handleViewStateChange = React.useCallback(
+        (e) => {
+            zoomRef.current = e.viewState.zoom;
+            setHoverInfo({});
+        },
+        [setHoverInfo]
+    );
 
-    const onExpandTooltip = (info) => {
-        if (info.picked && showCluster) {
+    const onExpandTooltip = React.useCallback((info) => {
+        if (info.picked) {
             setHoverInfo(info);
+            const [lat, lng] = info.coordinate;
+            setOrigin([lng, lat]);
+            // TODO: filter markers that are not part of the cluster;
+            zoomRef.current += 3;
         } else {
             setHoverInfo({});
         }
-    };
+    }, []);
 
-    const onToggleMenu = () => {
+    const onToggleMenu = React.useCallback(() => {
         setToggle(!toggle);
-    };
+    }, [toggle, setToggle]);
 
-    const onGoTo = (marker) => {
-        setOrigin(marker.coordinates);
-        setZoom(CONSTANTS.ZOOM_MARKER);
-    };
+    const onGoTo = React.useCallback(
+        (marker) => {
+            setOrigin(marker.coordinates);
+            zoomRef.current = CONSTANTS.ZOOM_MARKER;
+        },
+        [setOrigin]
+    );
 
-    const onZoomOut = () => {
-        if (zoom > CONSTANTS.ZOOM_RESET) {
-            setZoom(CONSTANTS.ZOOM_RESET);
+    const onZoomOut = React.useCallback(() => {
+        if (zoomRef.current !== CONSTANTS.ZOOM_RESET) {
+            zoomRef.current = CONSTANTS.ZOOM_RESET;
         }
-    };
+    }, []);
 
-    const layerProps = {
+    const layer = new IconCluster({
         data: markers,
         pickable: true,
         getPosition: (d) => {
+            // Deck.gl wants it that way
             const [lat, lng] = d.coordinates;
             return [lng, lat];
         },
         iconAtlas,
         iconMapping,
         onHover: !hoverInfo.objects && setHoverInfo,
-    };
-
-    const layer = showCluster
-        ? new IconCluster({
-              ...layerProps,
-              id: 'icon-cluster',
-              sizeScale: 60,
-          })
-        : new IconLayer({
-              ...layerProps,
-              id: 'icon',
-              getIcon: (d) => 'marker',
-              sizeUnits: 'meters',
-              sizeScale: 2000,
-              sizeMinPixels: 6,
-          });
+        id: 'icon-cluster',
+        sizeScale: 60,
+    });
 
     const INITIAL_VIEW_STATE = {
         latitude: origin && origin[0],
         longitude: origin && origin[1],
         maxZoom: CONSTANTS.MAX_ZOOM,
-        zoom: zoom,
+        zoom: zoomRef.current,
         pitch: CONSTANTS.PITCH,
         bearing: CONSTANTS.BEARING,
     };
@@ -129,13 +126,13 @@ export default function App({
                 layers={[layer]}
                 initialViewState={INITIAL_VIEW_STATE}
                 controller={{ dragRotate: false }}
-                onViewStateChange={onHideTooltip}
+                onViewStateChange={handleViewStateChange}
                 onClick={onExpandTooltip}
             >
                 <MapView
                     id="map"
                     bottom="0"
-                    width={toggle ? '70%' : '100%'}
+                    width={toggle ? '80%' : '100%'}
                     repeat={true}
                 >
                     <StaticMap
